@@ -2480,7 +2480,21 @@ static const char *get_include_fname (c2m_ctx_t c2m_ctx, token_t t, const char *
 
   *content = NULL;
   assert (t->code == T_STR || t->code == T_HEADER);
-  if ((name = t->node->u.s.s)[0] != '/') {
+  name = t->node->u.s.s;
+
+  /* Embedder hook: resolve via in-memory filesystem first.
+     If the hook claims the include, use its content directly and
+     return the include name as written (used by add_include_stream
+     for #pragma once tracking and diagnostics). */
+  if (c2m_options->read_include != NULL) {
+    if (c2m_options->read_include (c2m_options->read_include_data, name, cs->fname, content)
+        && *content != NULL) {
+      return uniq_cstr (c2m_ctx, name).s;
+    }
+    *content = NULL; /* hook said no - reset before disk path */
+  }
+
+  if (name[0] != '/') {
     if (t->repr[0] == '"') {
       /* Search relative to the current source dir */
       if (cs->fname != NULL) {

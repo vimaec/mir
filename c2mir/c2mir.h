@@ -26,8 +26,25 @@ struct c2mir_options {
   size_t macro_commands_num, include_dirs_num;
   struct c2mir_macro_command *macro_commands;
   const char **include_dirs;
-};
 
+  /* Embedder hook for resolving #include directives from an in-memory
+     filesystem. When non-NULL, c2mir calls this in get_include_fname
+     BEFORE walking header_dirs and system_header_dirs.
+
+     The hook receives the include name as written in the source (no
+     path resolution applied) and the filename of the including
+     source (cs->fname, which may be NULL for the top-level stream).
+
+     Return non-zero with *out_content set to a NUL-terminated string
+     to use that content as the include body. Return 0 to fall through
+     to c2mir's standard disk search and built-in standard_includes
+     table.
+
+     The content pointer must remain valid until c2mir_compile returns. */
+  int (*read_include) (void *data, const char *name, const char *base_fname,
+                       const char **out_content);
+  void *read_include_data;
+};
 void c2mir_init (MIR_context_t ctx);
 void c2mir_finish (MIR_context_t ctx);
 int c2mir_compile (MIR_context_t ctx, struct c2mir_options *ops, int (*getc_func) (void *),
