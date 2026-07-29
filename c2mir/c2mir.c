@@ -2563,14 +2563,12 @@ static void check_pragma (c2m_ctx_t c2m_ctx, token_t t, VARR (token_t) * tokens)
 
   i = 0;
   if (i < tokens_len && tokens_arr[i]->code == ' ') i++;
-#ifdef _WIN32
   if (i + 1 == tokens_len && tokens_arr[i]->code == T_ID
       && strcmp (tokens_arr[i]->repr, "once") == 0) {
     pre_ctx_t pre_ctx = c2m_ctx->pre_ctx;
     VARR_PUSH (char_ptr_t, once_include_files, cs->fname);
     return;
   }
-#endif
   if (i >= tokens_len || tokens_arr[i]->code != T_ID || strcmp (tokens_arr[i]->repr, "STDC") != 0) {
     warning (c2m_ctx, t->pos, "unknown pragma");
     return;
